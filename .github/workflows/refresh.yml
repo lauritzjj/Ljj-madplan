@@ -1,0 +1,40 @@
+name: Refresh Rema 1000 discounts
+
+on:
+  schedule:
+    # 04:15 UTC daily ≈ 06:15 CEST / 05:15 CET
+    # Cron runs in UTC; GitHub Actions schedules can be delayed up to ~15 min during peak load.
+    - cron: "15 4 * * *"
+  workflow_dispatch:        # manual trigger from the Actions tab
+  push:
+    paths:
+      - "scripts/refresh.mjs"
+      - ".github/workflows/refresh.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Fetch Rema 1000 catalogue
+        run: node scripts/refresh.mjs
+
+      - name: Commit if changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add discounts.json
+          if git diff --cached --quiet; then
+            echo "No changes — nothing to commit."
+          else
+            git commit -m "chore: refresh Rema 1000 discounts ($(date -u +%Y-%m-%d))"
+            git push
+          fi

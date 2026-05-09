@@ -1,0 +1,959 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#c8102e" />
+<title>Madplan — Rema 1000 ugentlig madplan</title>
+<style>
+  :root { color-scheme: light; --rema:#c8102e; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: #1a1a1a;
+    background: #fafaf7;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 18px 22px 80px; }
+  header.app {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 16px; flex-wrap: wrap; padding-bottom: 6px;
+    border-bottom: 1px solid #e5e2db; margin-bottom: 18px;
+  }
+  header.app h1 {
+    margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.01em;
+  }
+  header.app h1 .accent { color: var(--rema); }
+  header.app .meta { font-size: 12px; color: #6b6862; }
+  .tabs {
+    display: flex; gap: 2px; margin: 0 0 14px;
+    background: #efeae0; border-radius: 10px; padding: 4px; width: fit-content;
+    overflow-x: auto; max-width: 100%;
+  }
+  .tabs button {
+    background: transparent; border: 0; padding: 8px 14px;
+    font-size: 13.5px; font-weight: 600; color: #5b5853;
+    border-radius: 7px; cursor: pointer; white-space: nowrap;
+  }
+  .tabs button.active { background: #fff; color: #1a1a1a; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+  .tabs button .badge {
+    display: inline-block; min-width: 18px; padding: 1px 6px; margin-left: 6px;
+    background: var(--rema); color: #fff; border-radius: 10px; font-size: 11px; font-weight: 700;
+    text-align: center;
+  }
+  .tabs button.active .badge { background: #1a1a1a; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .toolbar {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    padding: 10px 12px; background: #fff;
+    border: 1px solid #e5e2db; border-radius: 10px;
+    margin-bottom: 14px;
+  }
+  .toolbar input[type="text"], .toolbar select {
+    padding: 6px 10px; font-size: 13px; border: 1px solid #ddd6c8; border-radius: 6px;
+    background: #fff; color: #1a1a1a; min-width: 0;
+  }
+  .toolbar input[type="text"] { flex: 1 1 200px; }
+  .toolbar label.chk {
+    display: inline-flex; align-items: center; gap: 6px; font-size: 13px;
+    color: #444; cursor: pointer;
+  }
+  .toolbar .stat { font-size: 12px; color: #6b6862; margin-left: auto; }
+  .btn {
+    padding: 6px 12px; font-size: 13px; font-weight: 600;
+    background: #1a1a1a; color: #fff; border: 0; border-radius: 6px; cursor: pointer;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn.secondary { background: #fff; color: #1a1a1a; border: 1px solid #ddd6c8; }
+  .btn.danger { background: var(--rema); }
+  .btn.primary-cta { background: var(--rema); padding: 10px 16px; font-size: 14px; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .grid {
+    display: grid; gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+  .card {
+    background: #fff; border: 1px solid #e5e2db; border-radius: 10px;
+    padding: 10px; display: flex; flex-direction: column; gap: 8px;
+    position: relative;
+  }
+  .card .img {
+    width: 100%; aspect-ratio: 1 / 1; background: #f4f1ea;
+    border-radius: 6px; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+  .card .img img {
+    max-width: 100%; max-height: 100%; object-fit: contain;
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    z-index: 2; background: inherit;
+  }
+  .card .img .ph {
+    font-size: 56px; line-height: 1; user-select: none; z-index: 1;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.06));
+  }
+  .card .img.dept-kød        { background: #fde8e8; }
+  .card .img.dept-mejeri     { background: #e8f0fd; }
+  .card .img.dept-frugt      { background: #e8f7e8; }
+  .card .img.dept-kolonial   { background: #fdf3e0; }
+  .card .img.dept-frost      { background: #e6f4f8; }
+  .card .img.dept-drikkevarer{ background: #f1e8fd; }
+  .card .img.dept-brød       { background: #fcf0d8; }
+  .card h3 { margin: 0; font-size: 14px; font-weight: 700; text-transform: capitalize; }
+  .card .underline { font-size: 12px; color: #6b6862; }
+  .card .price { font-size: 18px; font-weight: 800; color: var(--rema); }
+  .card .price .unit { font-size: 11px; font-weight: 500; color: #6b6862; margin-left: 4px; }
+  .card .normal-price { font-size: 11px; color: #6b6862; text-decoration: line-through; }
+  .card .save-pct {
+    display: inline-block; background: var(--rema); color: #fff;
+    font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-left: 6px;
+  }
+  .card .ends { font-size: 11px; color: #6b6862; }
+  .card .actions { display: flex; gap: 6px; margin-top: auto; }
+  .card .actions button { flex: 1; padding: 6px 8px; font-size: 12px; }
+  .card.selected { border-color: var(--rema); box-shadow: 0 0 0 2px rgba(200,16,46,0.12); }
+  .card .check {
+    position: absolute; top: 8px; right: 8px;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--rema); color: #fff; font-size: 14px; font-weight: 700;
+    display: none; align-items: center; justify-content: center; z-index: 3;
+  }
+  .card.selected .check { display: flex; }
+  .card .status-badge {
+    position: absolute; top: 8px; left: 8px;
+    font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px;
+    text-transform: uppercase; letter-spacing: 0.04em; z-index: 3;
+  }
+  .card .status-badge.upcoming { background: #ffe2a3; color: #7a4f00; }
+  .card .status-badge.expired  { background: #d8d4cb; color: #555; }
+  .card.upcoming { opacity: 0.92; }
+  .card.expired { opacity: 0.55; filter: grayscale(0.4); }
+  .card.expired .price { color: #6b6862; }
+
+  .settings-grid {
+    display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    background: #fff; border: 1px solid #e5e2db; border-radius: 10px; padding: 16px;
+  }
+  .settings-grid label {
+    display: block; font-size: 12px; font-weight: 600; color: #5b5853;
+    margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .settings-grid input[type="number"], .settings-grid input[type="text"] {
+    width: 100%; padding: 8px 10px; font-size: 14px;
+    border: 1px solid #ddd6c8; border-radius: 6px; background: #fff;
+  }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px; font-size: 12px; border: 1px solid #ddd6c8;
+    border-radius: 16px; background: #fff; color: #1a1a1a; cursor: pointer; user-select: none;
+  }
+  .chip.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+
+  .meals-grid {
+    display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  }
+  .meal-card {
+    background: #fff; border: 1px solid #e5e2db; border-radius: 10px;
+    padding: 14px; display: flex; flex-direction: column; gap: 8px;
+  }
+  .meal-card h3 { margin: 0; font-size: 16px; }
+  .meal-card .servings {
+    font-size: 11px; color: #6b6862; background: #f4f1ea;
+    padding: 2px 8px; border-radius: 10px; align-self: flex-start;
+  }
+  .meal-card .ingredients { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 3px; font-size: 13px; }
+  .meal-card .ingredients li {
+    display: flex; justify-content: space-between; gap: 8px;
+    padding: 3px 0; border-bottom: 1px dashed #ece7dc;
+  }
+  .meal-card .ingredients li.matched .price { color: var(--rema); font-weight: 700; }
+  .meal-card .ingredients li:not(.matched) { color: #6b6862; }
+  .meal-card .ingredients li:not(.matched) .price { color: #6b6862; font-style: italic; }
+  .meal-card .steps { margin: 0; padding-left: 18px; font-size: 13px; color: #444; }
+  .meal-card .steps li { margin-bottom: 3px; }
+  .meal-card .est-cost {
+    font-size: 13px; font-weight: 700; padding-top: 4px;
+    border-top: 1px solid #ece7dc; display: flex; justify-content: space-between;
+  }
+
+  .shopping {
+    background: #fff; border: 1px solid #e5e2db; border-radius: 10px; padding: 16px;
+  }
+  .shopping h2 { margin-top: 0; font-size: 18px; }
+  .shopping-section { margin-bottom: 18px; }
+  .shopping-section h3 {
+    font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em;
+    color: #6b6862; border-bottom: 1px solid #ece7dc; padding-bottom: 4px; margin: 14px 0 8px;
+  }
+  .shopping-section ul { list-style: none; padding: 0; margin: 0; }
+  .shopping-section li {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 0; border-bottom: 1px dashed #f0ece1;
+  }
+  .shopping-section li input[type="checkbox"] { width: 16px; height: 16px; }
+  .shopping-section li .name { flex: 1; }
+  .shopping-section li .qty { font-size: 12px; color: #6b6862; }
+  .shopping-section li .price { font-weight: 700; min-width: 70px; text-align: right; }
+  .shopping-section li.checked .name, .shopping-section li.checked .qty {
+    text-decoration: line-through; color: #b6b1a4;
+  }
+  .total-row {
+    display: flex; justify-content: space-between; padding: 12px 0;
+    font-size: 16px; font-weight: 800; border-top: 2px solid #1a1a1a; margin-top: 12px;
+  }
+
+  .state { text-align: center; padding: 40px 16px; color: #6b6862; }
+  .state h2 { margin-top: 0; color: #1a1a1a; }
+  .state .hint { font-size: 13px; max-width: 480px; margin: 8px auto 16px; }
+  .spinner {
+    display: inline-block; width: 18px; height: 18px;
+    border: 2px solid var(--rema); border-top-color: transparent;
+    border-radius: 50%; animation: spin 0.7s linear infinite;
+    vertical-align: middle; margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  textarea.import-area {
+    width: 100%; min-height: 140px; padding: 10px; border: 1px solid #ddd6c8;
+    border-radius: 6px; font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 12px; background: #fafaf7;
+  }
+  details.help { background: #fff7eb; border: 1px solid #f3e1c0; border-radius: 8px; padding: 8px 12px; margin-bottom: 14px; }
+  details.help summary { cursor: pointer; font-weight: 600; font-size: 13px; }
+  details.help p { font-size: 13px; margin: 8px 0 0; color: #5b5853; }
+
+  .toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: #1a1a1a; color: #fff; padding: 10px 16px; border-radius: 6px;
+    font-size: 13px; opacity: 0; transition: opacity 0.2s; pointer-events: none; z-index: 100;
+  }
+  .toast.show { opacity: 1; }
+
+  @media (max-width: 600px) {
+    .wrap { padding: 12px; }
+    header.app h1 { font-size: 18px; }
+    .grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+    .card .img .ph { font-size: 44px; }
+  }
+
+  @media print {
+    .tabs, .toolbar, .actions, .btn { display: none !important; }
+    body { background: #fff; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="app">
+    <h1>Madplan <span class="accent">·</span> Rema 1000 ugentlig</h1>
+    <div class="meta" id="data-status">Indlæser tilbud…</div>
+  </header>
+
+  <nav class="tabs" id="tabs">
+    <button data-tab="discounts" class="active">Tilbud <span class="badge" id="badge-discounts">0</span></button>
+    <button data-tab="selected">Valgte <span class="badge" id="badge-selected">0</span></button>
+    <button data-tab="meals">Måltider <span class="badge" id="badge-meals">0</span></button>
+    <button data-tab="shopping">Indkøbsliste</button>
+    <button data-tab="settings">Indstillinger</button>
+  </nav>
+
+  <!-- DISCOUNTS -->
+  <section class="panel active" id="panel-discounts">
+    <div class="toolbar">
+      <input type="text" id="search" placeholder="Søg i tilbud (fx kylling, pasta)…" />
+      <select id="dept-filter"><option value="">Alle afdelinger</option></select>
+      <select id="status-filter">
+        <option value="active-upcoming">Aktive + kommende</option>
+        <option value="active">Kun aktive nu</option>
+        <option value="upcoming">Kun kommende</option>
+        <option value="all">Alle (inkl. udløbne)</option>
+      </select>
+      <select id="sort">
+        <option value="discount-desc">Største besparelse</option>
+        <option value="price-asc">Laveste pris</option>
+        <option value="starts-asc">Starter snart</option>
+        <option value="ends-asc">Udløber snart</option>
+        <option value="name">Navn (A–Å)</option>
+      </select>
+      <label class="chk"><input type="checkbox" id="campaign-only" checked /> Kun rabat</label>
+      <span class="stat" id="discount-stat">–</span>
+    </div>
+    <div id="discount-grid" class="grid"></div>
+    <div class="state" id="discount-empty" style="display:none;">
+      <h2>Ingen matchende tilbud</h2>
+      <p class="hint">Prøv at fjerne et filter.</p>
+    </div>
+  </section>
+
+  <!-- SELECTED -->
+  <section class="panel" id="panel-selected">
+    <div class="toolbar">
+      <span class="stat" id="selected-stat">Vælg tilbud du vil bygge måltider rundt om.</span>
+      <button class="btn danger" id="clear-selected">Ryd valgte</button>
+      <button class="btn primary-cta" id="open-claude">Åbn i Claude → få madplan ✨</button>
+    </div>
+    <details class="help">
+      <summary>Sådan virker AI-madplanen</summary>
+      <p>Når du har valgt tilbud, klik <strong>Åbn i Claude</strong>. Det åbner <code>claude.ai</code> med en prompt der allerede er udfyldt. Claude returnerer en madplan som JSON. Kopiér den, klik <strong>Importér madplan</strong> nedenfor på <em>Måltider</em>-fanen, indsæt JSON, og opskrifterne dukker op med priser og estimerede omkostninger.</p>
+    </details>
+    <div id="selected-grid" class="grid"></div>
+    <div class="state" id="selected-empty">
+      <h2>Ingen valgte endnu</h2>
+      <p class="hint">Gå til <strong>Tilbud</strong>-fanen og tryk "Tilføj" på de varer du gerne vil have med i ugens madplan.</p>
+    </div>
+  </section>
+
+  <!-- MEALS -->
+  <section class="panel" id="panel-meals">
+    <div class="toolbar">
+      <span class="stat" id="meals-stat">–</span>
+      <button class="btn secondary" id="show-import">Importér madplan</button>
+      <button class="btn danger" id="clear-meals">Ryd måltider</button>
+    </div>
+    <div id="import-area" style="display:none;background:#fff;border:1px solid #e5e2db;border-radius:10px;padding:14px;margin-bottom:14px;">
+      <p style="margin:0 0 8px;font-size:13px;color:#5b5853;">Indsæt JSON fra Claude (objekt med <code>meals</code>-array):</p>
+      <textarea class="import-area" id="meal-paste" placeholder='{"meals":[{"title":"...","servings":2,"ingredients":[{"name":"kyllingebryst","qty":300,"unit":"g","fromOfferId":"rema-404995"}],"steps":["..."]}]}'></textarea>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <button class="btn" id="import-meals">Importér</button>
+        <button class="btn secondary" id="hide-import">Annuller</button>
+      </div>
+    </div>
+    <div id="meals-grid" class="meals-grid"></div>
+    <div class="state" id="meals-empty">
+      <h2>Ingen måltider endnu</h2>
+      <p class="hint">Klik <strong>Åbn i Claude</strong> på <em>Valgte</em>-fanen for at få en madplan, eller <strong>Importér madplan</strong> for at indsætte JSON manuelt.</p>
+    </div>
+  </section>
+
+  <!-- SHOPPING -->
+  <section class="panel" id="panel-shopping">
+    <div id="shopping-content"></div>
+    <div class="state" id="shopping-empty">
+      <h2>Tom indkøbsliste</h2>
+      <p class="hint">Vælg tilbud, eller importér en madplan, så samler vi alt på én liste.</p>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="panel" id="panel-settings">
+    <div class="settings-grid">
+      <div>
+        <label>Antal personer</label>
+        <input type="number" id="people" min="1" max="12" value="2" />
+      </div>
+      <div>
+        <label>Antal dage</label>
+        <input type="number" id="days" min="1" max="14" value="7" />
+      </div>
+      <div>
+        <label>Måltider pr. dag</label>
+        <input type="number" id="meals-per-day" min="1" max="4" value="2" />
+      </div>
+      <div>
+        <label>Postnr (valgfri)</label>
+        <input type="text" id="postcode" placeholder="fx 2100" />
+      </div>
+      <div style="grid-column: 1 / -1;">
+        <label>Kost-præferencer</label>
+        <div class="chips" id="diet-chips">
+          <span class="chip" data-v="høj-protein">Høj-protein</span>
+          <span class="chip" data-v="vegetarisk">Vegetarisk</span>
+          <span class="chip" data-v="vegansk">Vegansk</span>
+          <span class="chip" data-v="lav-fedt">Lav-fedt</span>
+          <span class="chip" data-v="hurtigt-30min">≤30 min</span>
+          <span class="chip" data-v="batch-prep">Batch-prep venligt</span>
+          <span class="chip" data-v="ingen-svinekød">Ingen svinekød</span>
+          <span class="chip" data-v="glutenfri">Glutenfri</span>
+        </div>
+      </div>
+      <div style="grid-column: 1 / -1;">
+        <label>Allergener / aldrig (komma-separeret)</label>
+        <input type="text" id="avoid" placeholder="fx skaldyr, koriander, leverpostej" />
+      </div>
+      <div style="grid-column: 1 / -1;">
+        <label>Datakilde</label>
+        <p style="font-size:12px;color:#6b6862;margin:4px 0 0;">Tilbud hentes fra <code>./discounts.json</code> som auto-opdateres dagligt af GitHub Actions. Sidste opdatering vises i headeren.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+const LS_KEY = "madplan_web_v1";
+const defaultState = {
+  settings: { people: 2, days: 7, mealsPerDay: 2, postcode: "", diet: [], avoid: "" },
+  selectedIds: [],
+  meals: [],
+  checkedItems: {}
+};
+const state = loadState();
+function loadState() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return structuredClone(defaultState);
+    const parsed = JSON.parse(raw);
+    return { ...structuredClone(defaultState), ...parsed,
+             settings: { ...defaultState.settings, ...(parsed.settings || {}) } };
+  } catch (e) { return structuredClone(defaultState); }
+}
+function saveState() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) {}
+}
+
+let allProducts = [];
+let productsById = new Map();
+let dataMeta = null;
+
+async function loadDiscounts() {
+  setStatus("Indlæser tilbud…", true);
+  try {
+    const res = await fetch("./discounts.json", { cache: "no-cache" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    dataMeta = data;
+    allProducts = (data.products || []).map(productToInternal);
+    productsById = new Map(allProducts.map(p => [p.id, p]));
+    populateDeptFilter();
+    renderDiscounts();
+    renderSelected();
+    renderShopping();
+    const fetched = data.fetchedAt
+      ? new Date(data.fetchedAt).toLocaleString("da-DK", { day:"numeric", month:"short", hour:"2-digit", minute:"2-digit" })
+      : "ukendt";
+    setStatus(`${allProducts.length} tilbud · uge ${data.weekNo || "?"} · opdateret ${fetched}`, false);
+  } catch (e) {
+    console.error(e);
+    setStatus(`Kunne ikke indlæse discounts.json: ${e.message}`, false);
+  }
+}
+
+function productToInternal(x) {
+  return {
+    id: "rema-" + x.id,
+    sourceId: x.id,
+    store: "rema1000",
+    name: x.n,
+    underline: x.u || "",
+    image: x.img || null,
+    dept: x.d || "Andet",
+    category: x.c || "",
+    price: x.p,
+    normalPrice: x.np,
+    compareUnit: x.cu || null,
+    compareUnitPrice: x.cup || null,
+    isCampaign: !!x.camp,
+    startsAt: x.s ? x.s + "T00:00:00+00:00" : null,
+    endsAt: x.e ? x.e + "T00:00:00+00:00" : null,
+    labels: []
+  };
+}
+
+function offerStatus(p) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const start = p.startsAt ? new Date(p.startsAt) : null;
+  const end = p.endsAt ? new Date(p.endsAt) : null;
+  if (start && start > today) return "upcoming";
+  if (end && end < today) return "expired";
+  return "active";
+}
+
+function setStatus(text, loading) {
+  document.getElementById("data-status").innerHTML = (loading ? '<span class="spinner"></span>' : "") + text;
+}
+
+function populateDeptFilter() {
+  const sel = document.getElementById("dept-filter");
+  const cur = sel.value;
+  const depts = Array.from(new Set(allProducts.map(p => p.dept))).sort((a,b) => a.localeCompare(b,"da"));
+  sel.innerHTML = '<option value="">Alle afdelinger ('+allProducts.length+')</option>' +
+    depts.map(d => {
+      const n = allProducts.filter(p => p.dept === d).length;
+      return `<option value="${esc(d)}">${esc(d)} (${n})</option>`;
+    }).join("");
+  if (cur) sel.value = cur;
+}
+
+function getFilteredDiscounts() {
+  const q = document.getElementById("search").value.trim().toLowerCase();
+  const dept = document.getElementById("dept-filter").value;
+  const statusFilter = document.getElementById("status-filter").value;
+  const campaignOnly = document.getElementById("campaign-only").checked;
+  const sort = document.getElementById("sort").value;
+
+  let list = allProducts.filter(p => {
+    if (campaignOnly && !p.isCampaign) return false;
+    if (dept && p.dept !== dept) return false;
+    const status = offerStatus(p);
+    if (statusFilter === "active" && status !== "active") return false;
+    if (statusFilter === "upcoming" && status !== "upcoming") return false;
+    if (statusFilter === "active-upcoming" && status === "expired") return false;
+    if (q && !(p.name.toLowerCase().includes(q) || p.underline.toLowerCase().includes(q) ||
+               (p.category||"").toLowerCase().includes(q))) return false;
+    return true;
+  });
+
+  if (sort === "price-asc") list.sort((a,b) => a.price - b.price);
+  else if (sort === "name") list.sort((a,b) => a.name.localeCompare(b.name,"da"));
+  else if (sort === "starts-asc") list.sort((a,b) => (a.startsAt||"").localeCompare(b.startsAt||""));
+  else if (sort === "ends-asc") list.sort((a,b) => (a.endsAt||"").localeCompare(b.endsAt||""));
+  else list.sort((a,b) => savings(b) - savings(a));
+  return list;
+}
+function savings(p) {
+  if (!p.normalPrice || p.normalPrice <= p.price) return 0;
+  return (p.normalPrice - p.price) / p.normalPrice;
+}
+
+function renderDiscounts() {
+  const list = getFilteredDiscounts();
+  const grid = document.getElementById("discount-grid");
+  const empty = document.getElementById("discount-empty");
+  document.getElementById("badge-discounts").textContent = list.length;
+  document.getElementById("discount-stat").textContent =
+    list.length + " af " + allProducts.length + " tilbud";
+  if (list.length === 0) { grid.innerHTML = ""; empty.style.display = "block"; return; }
+  empty.style.display = "none";
+  grid.innerHTML = list.map(renderCard).join("");
+}
+
+function renderCard(p) {
+  const sel = state.selectedIds.includes(p.id);
+  const sav = savings(p);
+  const savBadge = sav >= 0.1 ? `<span class="save-pct">−${Math.round(sav*100)}%</span>` : "";
+  const normal = p.normalPrice && p.normalPrice > p.price ? `<div class="normal-price">Normalt ${fmtKr(p.normalPrice)}</div>` : "";
+  const ends = p.endsAt ? `<div class="ends">Gælder til ${fmtDate(p.endsAt)}</div>` : "";
+  const cu = p.compareUnit && p.compareUnitPrice ? `<span class="unit">/ ${fmtKr(p.compareUnitPrice,false)} pr. ${p.compareUnit}</span>` : "";
+  const deptKey = deptCssKey(p.dept);
+  const emoji = productEmoji(p);
+  const imgEl = p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display='none'" />` : "";
+  const status = offerStatus(p);
+  const statusBadge = status === "upcoming" ? `<span class="status-badge upcoming">Starter ${fmtDateShort(p.startsAt)}</span>`
+    : status === "expired" ? `<span class="status-badge expired">Udløbet</span>` : "";
+  return `
+    <div class="card ${sel?"selected":""} ${status}" data-id="${esc(p.id)}">
+      <div class="check">✓</div>
+      ${statusBadge}
+      <div class="img dept-${deptKey}"><span class="ph" aria-hidden="true">${emoji}</span>${imgEl}</div>
+      <h3>${esc(p.name.toLowerCase())}</h3>
+      <div class="underline">${esc(p.underline)}</div>
+      <div><span class="price">${fmtKr(p.price)}${savBadge}</span>${cu}</div>
+      ${normal}
+      ${ends}
+      <div class="actions">
+        <button class="btn ${sel?"danger":""}" data-action="toggle" data-id="${esc(p.id)}">${sel?"Fjern":"Tilføj"}</button>
+      </div>
+    </div>`;
+}
+
+function renderSelected() {
+  const items = state.selectedIds.map(id => productsById.get(id)).filter(Boolean);
+  const grid = document.getElementById("selected-grid");
+  const empty = document.getElementById("selected-empty");
+  document.getElementById("badge-selected").textContent = items.length;
+  const total = items.reduce((s,p) => s+(p.price||0), 0);
+  document.getElementById("selected-stat").textContent = items.length===0
+    ? "Vælg tilbud du vil bygge måltider rundt om."
+    : `${items.length} valgt · ${fmtKr(total)} ialt`;
+  document.getElementById("open-claude").disabled = items.length === 0;
+  if (items.length === 0) { grid.innerHTML = ""; empty.style.display = "block"; return; }
+  empty.style.display = "none";
+  grid.innerHTML = items.map(renderCard).join("");
+}
+
+function openInClaude() {
+  const items = state.selectedIds.map(id => productsById.get(id)).filter(Boolean);
+  if (items.length === 0) { toast("Vælg mindst én vare først."); return; }
+
+  const totalMeals = state.settings.days * state.settings.mealsPerDay;
+  const dietStr = state.settings.diet.length ? state.settings.diet.join(", ") : "ingen";
+  const avoidStr = state.settings.avoid.trim() || "ingen";
+
+  const prompt = `Lav en madplan med ${totalMeals} måltider til ${state.settings.people} personer over ${state.settings.days} dage (${state.settings.mealsPerDay} måltid pr. dag) baseret på disse Rema 1000-tilbud denne uge.
+
+Kost-præferencer: ${dietStr}.
+Undgå: ${avoidStr}.
+
+Tilbudsvarer (id i parentes):
+${items.map(p => `- ${p.name.toLowerCase()} (${p.underline}) — ${p.price.toFixed(2)} kr [id: ${p.id}, ${p.dept}]`).join("\n")}
+
+Brug så mange af tilbudsvarerne som muligt. Genbrug ingredienser på tværs af retter (én pakke pasta = flere middage).
+
+Returnér KUN gyldig JSON med følgende struktur — ingen forklaring, ingen markdown-fences:
+
+{"meals":[{"title":"kort dansk titel","servings":${state.settings.people},"ingredients":[{"name":"kort generisk navn fx 'kyllingebryst'","qty":300,"unit":"g","fromOfferId":"id fra listen ovenfor eller null hvis pantry"}],"steps":["3-5 korte trin på dansk"],"prepNotes":"valgfri batch-prep tip"}]}
+
+Vær realistisk med mængder. 1 kyllingebryst ≈ 150g.`;
+
+  const url = "https://claude.ai/new?q=" + encodeURIComponent(prompt);
+  window.open(url, "_blank", "noopener");
+}
+
+function importMeals() {
+  const txt = document.getElementById("meal-paste").value.trim();
+  if (!txt) { toast("Indsæt JSON først."); return; }
+  let parsed;
+  try {
+    let t = txt.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
+    const start = t.indexOf("{"), end = t.lastIndexOf("}");
+    if (start >= 0 && end > start) t = t.slice(start, end+1);
+    parsed = JSON.parse(t);
+  } catch (e) {
+    toast("Kunne ikke parse JSON: " + e.message);
+    return;
+  }
+  if (!parsed.meals || !Array.isArray(parsed.meals)) {
+    toast("JSON skal have et 'meals'-array.");
+    return;
+  }
+  state.meals = parsed.meals.map(hydrateMeal);
+  saveState();
+  renderMeals();
+  renderShopping();
+  document.getElementById("import-area").style.display = "none";
+  document.getElementById("meal-paste").value = "";
+  switchTab("meals");
+  toast(`${state.meals.length} måltider importeret`);
+}
+
+function hydrateMeal(m) {
+  const ingredients = (m.ingredients||[]).map(ing => {
+    const matched = ing.fromOfferId ? productsById.get(ing.fromOfferId) : null;
+    let estPrice = null;
+    if (matched && ing.qty && ing.unit) {
+      const cu = matched.compareUnit, cup = matched.compareUnitPrice;
+      if (cup && cu) {
+        const g = toGrams(ing.qty, ing.unit);
+        const ml = toMl(ing.qty, ing.unit);
+        if (cu === "kg" && g != null) estPrice = (g/1000) * cup;
+        else if (cu === "ltr" && ml != null) estPrice = (ml/1000) * cup;
+      }
+      if (estPrice == null) estPrice = matched.price / Math.max(1, state.settings.days * state.settings.mealsPerDay / 2);
+    }
+    return { ...ing, matched: !!matched, matchedName: matched?.name||null, estPrice };
+  });
+  const estCost = ingredients.reduce((s,i) => s + (i.estPrice||0), 0);
+  return { ...m, ingredients, estCost };
+}
+function toGrams(qty, unit) { unit=(unit||"").toLowerCase(); if(unit==="g")return qty; if(unit==="kg")return qty*1000; return null; }
+function toMl(qty, unit) { unit=(unit||"").toLowerCase(); if(unit==="ml")return qty; if(unit==="dl")return qty*100; if(unit==="l"||unit==="ltr")return qty*1000; if(unit==="tsk")return qty*5; if(unit==="spsk")return qty*15; return null; }
+
+function renderMeals() {
+  const grid = document.getElementById("meals-grid");
+  const empty = document.getElementById("meals-empty");
+  document.getElementById("badge-meals").textContent = state.meals.length;
+  const totalCost = state.meals.reduce((s,m) => s+(m.estCost||0), 0);
+  document.getElementById("meals-stat").textContent = state.meals.length===0
+    ? "Ingen importeret endnu."
+    : `${state.meals.length} måltider · ca. ${fmtKr(totalCost)} ialt`;
+  if (state.meals.length === 0) { grid.innerHTML = ""; empty.style.display = "block"; return; }
+  empty.style.display = "none";
+  grid.innerHTML = state.meals.map(m => {
+    const ing = (m.ingredients||[]).map(i => `
+      <li class="${i.matched?"matched":""}">
+        <span>${esc(i.name)} <span class="qty">${esc(i.qty + " " + (i.unit||""))}</span></span>
+        <span class="price">${i.estPrice!=null ? fmtKr(i.estPrice) : (i.matched?"":"pantry")}</span>
+      </li>`).join("");
+    const steps = (m.steps||[]).map(s => `<li>${esc(s)}</li>`).join("");
+    return `
+      <div class="meal-card">
+        <h3>${esc(m.title)}</h3>
+        <span class="servings">${m.servings || state.settings.people} portioner</span>
+        <ul class="ingredients">${ing}</ul>
+        ${steps?`<ol class="steps">${steps}</ol>`:""}
+        ${m.prepNotes?`<div style="font-size:12px;color:#6b6862;font-style:italic;">${esc(m.prepNotes)}</div>`:""}
+        <div class="est-cost"><span>Estimeret omkostning</span><span>${fmtKr(m.estCost||0)}</span></div>
+      </div>`;
+  }).join("");
+}
+
+function renderShopping() {
+  const root = document.getElementById("shopping-content");
+  const empty = document.getElementById("shopping-empty");
+  const byOffer = new Map();
+  const pantry = new Map();
+
+  for (const meal of state.meals) {
+    for (const ing of (meal.ingredients||[])) {
+      if (ing.matched) {
+        const e = byOffer.get(ing.fromOfferId) || { product: productsById.get(ing.fromOfferId), qty:0, unit:ing.unit, count:0 };
+        e.qty += Number(ing.qty)||0; e.count += 1; e.unit = e.unit || ing.unit;
+        byOffer.set(ing.fromOfferId, e);
+      } else {
+        const k = (ing.name||"").toLowerCase()+"|"+(ing.unit||"");
+        const e = pantry.get(k) || { name:ing.name, qty:0, unit:ing.unit };
+        e.qty += Number(ing.qty)||0;
+        pantry.set(k, e);
+      }
+    }
+  }
+  for (const id of state.selectedIds) {
+    if (!byOffer.has(id)) {
+      const product = productsById.get(id);
+      if (product) byOffer.set(id, { product, qty:1, unit:"stk", count:1, untouched:true });
+    }
+  }
+
+  const offerEntries = Array.from(byOffer.values()).filter(e => e.product);
+  const pantryEntries = Array.from(pantry.values());
+
+  if (offerEntries.length===0 && pantryEntries.length===0) {
+    root.innerHTML = ""; empty.style.display = "block"; return;
+  }
+  empty.style.display = "none";
+
+  offerEntries.sort((a,b) => a.product.dept.localeCompare(b.product.dept,"da") || a.product.name.localeCompare(b.product.name,"da"));
+
+  let html = `<div class="shopping"><h2>Indkøbsliste — uge ${weekNo()}</h2><div class="shopping-section"><h3 style="color:var(--rema);">Rema 1000</h3><ul>`;
+  let storeTotal = 0;
+  let lastDept = "";
+  for (const e of offerEntries) {
+    const p = e.product;
+    if (p.dept !== lastDept) {
+      html += `<li style="border:0;padding:8px 0 2px;"><strong style="font-size:11px;color:#6b6862;text-transform:uppercase;letter-spacing:0.04em;">${esc(p.dept)}</strong></li>`;
+      lastDept = p.dept;
+    }
+    const itemKey = "shop|"+p.id;
+    const checked = !!state.checkedItems[itemKey];
+    const qtyText = e.untouched ? "(valgt – ikke brugt i opskrift)" : `${e.count}× brugt · ${fmtQty(e.qty,e.unit)}`;
+    storeTotal += p.price;
+    html += `
+      <li class="${checked?"checked":""}" data-key="${esc(itemKey)}">
+        <input type="checkbox" ${checked?"checked":""} data-key="${esc(itemKey)}" />
+        <span class="name">${esc(p.name.toLowerCase())} <span class="qty">${esc(p.underline)} · ${esc(qtyText)}</span></span>
+        <span class="price">${fmtKr(p.price)}</span>
+      </li>`;
+  }
+  html += `</ul><div class="total-row"><span>Rema 1000 subtotal</span><span>${fmtKr(storeTotal)}</span></div></div>`;
+
+  if (pantryEntries.length) {
+    html += `<div class="shopping-section"><h3>Pantry / suppler hvis du mangler</h3><ul>`;
+    pantryEntries.sort((a,b) => (a.name||"").localeCompare(b.name||"","da"));
+    for (const e of pantryEntries) {
+      const itemKey = "pantry|"+(e.name||"")+"|"+(e.unit||"");
+      const checked = !!state.checkedItems[itemKey];
+      html += `
+        <li class="${checked?"checked":""}" data-key="${esc(itemKey)}">
+          <input type="checkbox" ${checked?"checked":""} data-key="${esc(itemKey)}" />
+          <span class="name">${esc(e.name)} <span class="qty">${esc(fmtQty(e.qty,e.unit))}</span></span>
+          <span class="price" style="color:#6b6862;">—</span>
+        </li>`;
+    }
+    html += `</ul></div>`;
+  }
+
+  html += `<div class="total-row"><span>I alt (kun tilbud)</span><span>${fmtKr(storeTotal)}</span></div>`;
+  html += `<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+    <button class="btn secondary" id="copy-list">Kopier som tekst</button>
+    <button class="btn secondary" id="print-list">Udskriv</button>
+  </div></div>`;
+  root.innerHTML = html;
+
+  root.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    cb.addEventListener("change", () => {
+      state.checkedItems[cb.dataset.key] = cb.checked;
+      saveState();
+      cb.closest("li").classList.toggle("checked", cb.checked);
+    });
+  });
+  document.getElementById("copy-list")?.addEventListener("click", () => {
+    let txt = "Indkøbsliste — uge "+weekNo()+"\n\nRema 1000:\n";
+    for (const e of offerEntries) txt += `  • ${e.product.name.toLowerCase()} (${e.product.underline}) — ${fmtKr(e.product.price)}\n`;
+    if (pantryEntries.length) { txt += "\nPantry:\n"; for (const e of pantryEntries) txt += `  • ${e.name} (${fmtQty(e.qty,e.unit)})\n`; }
+    navigator.clipboard.writeText(txt).then(() => toast("Kopieret"));
+  });
+  document.getElementById("print-list")?.addEventListener("click", () => window.print());
+}
+
+function renderSettings() {
+  document.getElementById("people").value = state.settings.people;
+  document.getElementById("days").value = state.settings.days;
+  document.getElementById("meals-per-day").value = state.settings.mealsPerDay;
+  document.getElementById("postcode").value = state.settings.postcode || "";
+  document.getElementById("avoid").value = state.settings.avoid || "";
+  document.querySelectorAll("#diet-chips .chip").forEach(c => {
+    c.classList.toggle("active", state.settings.diet.includes(c.dataset.v));
+  });
+}
+
+function switchTab(name) {
+  document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("active", b.dataset.tab === name));
+  document.querySelectorAll(".panel").forEach(p => p.classList.toggle("active", p.id === "panel-"+name));
+}
+document.getElementById("tabs").addEventListener("click", e => {
+  const b = e.target.closest("button[data-tab]");
+  if (b) switchTab(b.dataset.tab);
+});
+
+document.body.addEventListener("click", e => {
+  const btn = e.target.closest('button[data-action="toggle"]');
+  if (!btn) return;
+  const id = btn.dataset.id;
+  const idx = state.selectedIds.indexOf(id);
+  if (idx >= 0) state.selectedIds.splice(idx, 1);
+  else state.selectedIds.push(id);
+  saveState();
+  renderDiscounts();
+  renderSelected();
+  renderShopping();
+});
+
+document.getElementById("search").addEventListener("input", renderDiscounts);
+document.getElementById("dept-filter").addEventListener("change", renderDiscounts);
+document.getElementById("status-filter").addEventListener("change", renderDiscounts);
+document.getElementById("sort").addEventListener("change", renderDiscounts);
+document.getElementById("campaign-only").addEventListener("change", renderDiscounts);
+
+document.getElementById("clear-selected").addEventListener("click", () => {
+  if (!state.selectedIds.length) return;
+  if (!confirm("Ryd alle valgte tilbud?")) return;
+  state.selectedIds = []; saveState();
+  renderDiscounts(); renderSelected(); renderShopping();
+});
+document.getElementById("clear-meals").addEventListener("click", () => {
+  if (!state.meals.length) return;
+  if (!confirm("Ryd genererede måltider?")) return;
+  state.meals = []; state.checkedItems = {}; saveState();
+  renderMeals(); renderShopping();
+});
+document.getElementById("open-claude").addEventListener("click", openInClaude);
+document.getElementById("show-import").addEventListener("click", () => {
+  document.getElementById("import-area").style.display = "block";
+  document.getElementById("meal-paste").focus();
+});
+document.getElementById("hide-import").addEventListener("click", () => {
+  document.getElementById("import-area").style.display = "none";
+});
+document.getElementById("import-meals").addEventListener("click", importMeals);
+
+["people","days","meals-per-day"].forEach(id => {
+  document.getElementById(id).addEventListener("change", e => {
+    const v = parseInt(e.target.value,10);
+    if (!Number.isFinite(v) || v < 1) return;
+    if (id==="meals-per-day") state.settings.mealsPerDay = v;
+    else if (id==="days") state.settings.days = v;
+    else state.settings.people = v;
+    saveState();
+  });
+});
+document.getElementById("postcode").addEventListener("change", e => { state.settings.postcode = e.target.value.trim(); saveState(); });
+document.getElementById("avoid").addEventListener("change", e => { state.settings.avoid = e.target.value.trim(); saveState(); });
+document.getElementById("diet-chips").addEventListener("click", e => {
+  const c = e.target.closest(".chip"); if (!c) return;
+  const v = c.dataset.v;
+  const i = state.settings.diet.indexOf(v);
+  if (i >= 0) state.settings.diet.splice(i,1); else state.settings.diet.push(v);
+  c.classList.toggle("active");
+  saveState();
+});
+
+function esc(s) { return String(s==null?"":s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+function fmtKr(n, withSuffix=true) {
+  if (n==null||isNaN(n)) return "—";
+  const s = n.toLocaleString("da-DK", { minimumFractionDigits:2, maximumFractionDigits:2 });
+  return withSuffix ? s+" kr" : s;
+}
+function fmtDate(s) { try { return new Date(s).toLocaleDateString("da-DK",{weekday:"short",day:"numeric",month:"short"}); } catch { return s; } }
+function fmtDateShort(s) { try { return new Date(s).toLocaleDateString("da-DK",{weekday:"short",day:"numeric"}); } catch { return s; } }
+function fmtQty(qty, unit) { if (!qty) return unit||""; const r = qty%1===0?qty:qty.toFixed(1); return r+(unit?" "+unit:""); }
+function weekNo() { const d=new Date(); const start=new Date(d.getFullYear(),0,1); return Math.ceil(((d-start)/86400000+start.getDay()+1)/7); }
+function toast(msg) { const el=document.getElementById("toast"); el.textContent=msg; el.classList.add("show"); setTimeout(()=>el.classList.remove("show"),2400); }
+
+function deptCssKey(dept) {
+  if (!dept) return "default";
+  const d = dept.toLowerCase();
+  if (d.includes("kød")||d.includes("kod")||d.includes("fisk")||d.includes("fjerk")) return "kød";
+  if (d.includes("mejeri")) return "mejeri";
+  if (d.includes("frugt")||d.includes("grønt")||d.includes("gront")) return "frugt";
+  if (d.includes("brød")||d.includes("brod")) return "brød";
+  if (d.includes("kolonial")) return "kolonial";
+  if (d.includes("frost")) return "frost";
+  if (d.includes("drikkevarer")) return "drikkevarer";
+  return "default";
+}
+
+function productEmoji(p) {
+  const txt = ((p.name||"") + " " + (p.underline||"") + " " + (p.category||"")).toLowerCase();
+  const map = [
+    [/kylling|hane|fjerkræ|fjerkrae/, "🍗"],
+    [/oksek|hakket okse|bøf|boef/, "🥩"],
+    [/flæskest|flaeske|svine|gris|nakke|kotelet/, "🥓"],
+    [/bacon/, "🥓"],
+    [/lam\b/, "🐑"],
+    [/laks|fisk|torsk|tun/, "🐟"],
+    [/pølse|polse|griller/, "🌭"],
+    [/æg\b|aeg\b/, "🥚"],
+    [/ost\b|cheddar/, "🧀"],
+    [/smør|smor|kærgården|kaergaarden/, "🧈"],
+    [/mælk|maelk|fløde|flode|piskefl|madfl|fraiche/, "🥛"],
+    [/yoghurt|skyr|kefir/, "🥛"],
+    [/havredrik|sojadrik|plantedrik|oat /, "🥛"],
+    [/havregryn|gryn/, "🌾"],
+    [/brød|brod|baguette|toast|bolle/, "🍞"],
+    [/banan/, "🍌"],
+    [/æble|aeble|pink lady|gala/, "🍎"],
+    [/pære|paere/, "🍐"],
+    [/citron/, "🍋"],
+    [/appelsin|orange/, "🍊"],
+    [/jordbær|jordbar|hindbær|hindbar|skovbær|skovbar|bær|bar/, "🍓"],
+    [/tomat|ketchup/, "🍅"],
+    [/agurk/, "🥒"],
+    [/salat|spinat/, "🥬"],
+    [/kartof/, "🥔"],
+    [/løg|log\b|hvidløg|hvidlog/, "🧅"],
+    [/gulerod|gulerødder/, "🥕"],
+    [/peberfrugt|peber/, "🌶️"],
+    [/avocado/, "🥑"],
+    [/majs/, "🌽"],
+    [/svamp|champignon/, "🍄"],
+    [/pasta|spaghetti|lasagne/, "🍝"],
+    [/ris\b/, "🍚"],
+    [/pizza/, "🍕"],
+    [/burger/, "🍔"],
+    [/sushi/, "🍣"],
+    [/is\b|isbeger|cookie dough/, "🍦"],
+    [/chokolade|cocio/, "🍫"],
+    [/kage|tærte|taerte/, "🍰"],
+    [/slik|gummies/, "🍬"],
+    [/honning/, "🍯"],
+    [/kaffe/, "☕"],
+    [/the\b|tea/, "🍵"],
+    [/øl|ol\b|pilsner|beer/, "🍺"],
+    [/cider|sodavand|cola|jolly/, "🥤"],
+    [/vand /, "💧"],
+    [/vin\b/, "🍷"],
+    [/olie|olive/, "🫒"],
+    [/sennep/, "🌭"],
+    [/mayo|mayonnaise/, "🥚"],
+    [/sukker/, "🍬"],
+    [/salt|peber/, "🧂"],
+    [/tandpasta|sæbe|saebe|deo|shampoo/, "🧴"],
+    [/vaskemiddel|opvask|rengøring|rengoring/, "🧼"]
+  ];
+  for (const [re,e] of map) if (re.test(txt)) return e;
+  const d = (p.dept||"").toLowerCase();
+  if (d.includes("kød")||d.includes("fisk")) return "🥩";
+  if (d.includes("mejeri")) return "🥛";
+  if (d.includes("frugt")) return "🥕";
+  if (d.includes("brød")) return "🍞";
+  if (d.includes("frost")) return "🧊";
+  if (d.includes("drikkevarer")) return "🥤";
+  if (d.includes("kolonial")) return "🥫";
+  return "🛒";
+}
+
+renderSettings();
+renderSelected();
+renderMeals();
+loadDiscounts();
+</script>
+</body>
+</html>
